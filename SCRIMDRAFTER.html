@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Draft</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #000000;
+      margin: 0;
+      padding: 20px;
+    }
+    h1, h2 {
+      margin-top: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: rgb(255, 207, 241);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+    .section {
+      margin-bottom: 24px;
+    }
+    textarea, input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: 1px solid #000000;
+      font-size: 1rem;
+    }
+    button {
+      cursor: pointer;
+      background: #ff00bf;
+      color: white;
+      border: none;
+    }
+    button.secondary {
+      background: #7e0045;
+    }
+    button:disabled {
+      background: #9b0067;
+      cursor: not-allowed;
+    }
+    .teams {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .team {
+      background: #a85c8f;
+      padding: 16px;
+      border-radius: 10px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    .status {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Ruby's Scrim Draft Tool</h1>
+
+    <div class="section">
+      <h2>1. Enter Players</h2>
+      <p>Enter one player per line.</p>
+      <textarea id="playerInput" rows="8"></textarea>
+    </div>
+
+    <div class="section">
+      <h2>2. Team Captains</h2>
+      <input id="teamAName" placeholder="Team A name" value="Team A" />
+      <input id="teamBName" placeholder="Team B name" value="Team B" />
+    </div>
+
+    <div class="section">
+      <h2>3. Flip Coin</h2>
+      <button onclick="flipCoin()">Flip Coin</button>
+      <div class="status" id="coinResult"></div>
+    </div>
+
+    <div class="section">
+      <h2>4. Draft</h2>
+      <select id="playerSelect"></select>
+      <button onclick="pickSelectedPlayer()" id="pickBtn" disabled>Pick Selected Player</button>
+      <div class="status" id="draftStatus"></div>
+    </div>
+
+    <div class="teams">
+      <div class="team">
+        <h3 id="teamATitle">Team A</h3>
+        <ul id="teamAList"></ul>
+      </div>
+      <div class="team">
+        <h3 id="teamBTitle">Team B</h3>
+        <ul id="teamBList"></ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <button class="secondary" onclick="resetDraft()">Reset Draft</button>
+    </div>
+  </div>
+
+  <script>
+    let players = [];
+    let currentPickTeam = null; // 'A' or 'B'
+    let pickIndex = 0;
+
+    function flipCoin() {
+      players = document.getElementById('playerInput').value
+        .split('\n')
+        .map(p => p.trim())
+        .filter(p => p !== '');
+
+      if (players.length === 0) {
+        alert('Please enter at least one player.');
+        return;
+      }
+
+      document.getElementById('teamATitle').textContent = document.getElementById('teamAName').value;
+      document.getElementById('teamBTitle').textContent = document.getElementById('teamBName').value;
+
+      currentPickTeam = Math.random() < 0.5 ? 'A' : 'B';
+      pickIndex = 0;
+
+      document.getElementById('coinResult').textContent =
+        (currentPickTeam === 'A' ? 'Team A' : 'Team B') + ' picks first!';
+
+      populateSelect();
+      document.getElementById('pickBtn').disabled = false;
+      updateStatus();
+    }
+
+    function updateStatus() {
+      if (players.length > 0) {
+        document.getElementById('draftStatus').textContent =
+          (currentPickTeam === 'A' ? 'Team A' : 'Team B') + "'s turn to pick.";
+      }
+    }
+
+    function populateSelect() {
+      const select = document.getElementById('playerSelect');
+      select.innerHTML = '';
+      players.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p;
+        option.textContent = p;
+        select.appendChild(option);
+      });
+    }
+
+    function pickSelectedPlayer() {
+      const select = document.getElementById('playerSelect');
+      const player = select.value;
+      if (!player) return;
+
+      const list = currentPickTeam === 'A'
+        ? document.getElementById('teamAList')
+        : document.getElementById('teamBList');
+
+      const li = document.createElement('li');
+      li.textContent = player;
+      list.appendChild(li);
+
+      players = players.filter(p => p !== player);
+      populateSelect();
+
+      currentPickTeam = currentPickTeam === 'A' ? 'B' : 'A';
+
+      if (players.length === 0) {
+        document.getElementById('draftStatus').textContent = 'Draft complete.';
+        document.getElementById('pickBtn').disabled = true;
+      } else {
+        updateStatus();
+      }
+    }
+    
+
+    function resetDraft() {
+      document.getElementById('teamAList').innerHTML = '';
+      document.getElementById('teamBList').innerHTML = '';
+      document.getElementById('coinResult').textContent = '';
+      document.getElementById('draftStatus').textContent = '';
+      document.getElementById('pickBtn').disabled = true;
+      players = [];
+      pickIndex = 0;
+      currentPickTeam = null;
+    }
+  </script>
+</body>
+</html>
